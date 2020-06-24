@@ -291,7 +291,6 @@ func (p *Peer2PeerBackend) PollNetplayEvents() {
 }
 
 func (p *Peer2PeerBackend) OnNetplayPeerEvent(evt *network.Event, queue int64) {
-	logrus.Info("OnNetplayPeerEvent ", evt.Type)
 	p.OnNetplayEvent(evt, p.QueueToPlayerHandle(queue))
 	switch evt.Type {
 	case network.EventInput:
@@ -308,7 +307,9 @@ func (p *Peer2PeerBackend) OnNetplayPeerEvent(evt *network.Event, queue int64) {
 			p.LocalConnectStatus[queue].LastFrame = evt.Input.Frame
 		}
 		break
-
+	case network.EventGameState:
+		//TODO: Rollback if checksum doesn't match
+		break
 	case network.EventDisconnected:
 		p.DisconnectPlayer(p.QueueToPlayerHandle(queue))
 		break

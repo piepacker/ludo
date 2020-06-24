@@ -13,6 +13,7 @@ const (
 	EventDisconnected       TypeEvent = 4
 	EventNetworkInterrupted TypeEvent = 5
 	EventNetworkResumed     TypeEvent = 6
+	EventGameState          TypeEvent = 7
 )
 
 type Synchronizing struct {
@@ -23,6 +24,7 @@ type Synchronizing struct {
 type Event struct {
 	Type              TypeEvent
 	Input             lib.GameInput
+	SavedFrame        lib.SavedFrame
 	Synchronizing     Synchronizing
 	DisconnectTimeout int64
 }

@@ -168,6 +168,19 @@ func (n *Netplay) Read() {
 	}
 }
 
+func (n *Netplay) SendGameState(state lib.SavedFrame) {
+	var msg *NetplayMsgType = new(NetplayMsgType)
+	msg.Init(GameState)
+	msg.GameState.Checksum = state.Checksum
+	msg.GameState.StartFrame = state.Frame
+	if n.LocalConnectStatus != nil {
+		copy(msg.GameState.PeerConnectStatus, n.LocalConnectStatus)
+	} else {
+		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, MSG_MAX_PLAYERS)
+	}
+	n.SendMsg(msg)
+}
+
 func (n *Netplay) SendInput(input *lib.GameInput) {
 	if n.CurrentState == Running {
 		n.TimeSync.AdvanceFrame(input, n.LocalFrameAdvantage, n.RemoteFrameAdvantage)
@@ -175,18 +188,6 @@ func (n *Netplay) SendInput(input *lib.GameInput) {
 		n.PendingOutput.Push(&t)
 	}
 	n.SendPendingOutput()
-}
-
-func (n *Netplay) SendGameState(state lib.SavedFrame) {
-	var msg *NetplayMsgType = new(NetplayMsgType)
-	msg.Init(GameState)
-	msg.GameState.Checksum = state.Checksum
-	if n.LocalConnectStatus != nil {
-		copy(msg.GameState.PeerConnectStatus, n.LocalConnectStatus)
-	} else {
-		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, MSG_MAX_PLAYERS)
-	}
-	n.SendMsg(msg)
 }
 
 func (n *Netplay) SendPendingOutput() {
@@ -360,8 +361,24 @@ func (n *Netplay) OnSyncReply(msg *NetplayMsgType) bool {
 }
 
 func (n *Netplay) OnGameState(msg *NetplayMsgType) bool {
-	logrus.Info("ON GAME STATE")
-	logrus.Info("Game State Checksum: ", msg.GameState.Checksum)
+	logrus.Info(fmt.Sprintf("Received game state (checksum: %08x).", msg.GameState.Checksum))
+	// Update the peer connection status if this peer is still considered to be part of the network.
+	remoteStatus := msg.GameState.PeerConnectStatus
+	for i := 0; i < len(remoteStatus); i++ {
+		if remoteStatus[i].LastFrame < n.PeerConnectStatus[i].LastFrame {
+			logrus.Panic("Assert error remotestatus Lastframe")
+		}
+		n.PeerConnectStatus[i].Disconnected = n.PeerConnectStatus[i].Disconnected || remoteStatus[i].Disconnected
+		n.PeerConnectStatus[i].LastFrame = lib.MAX(n.PeerConnectStatus[i].LastFrame, remoteStatus[i].LastFrame)
+	}
+
+	// Send the event to the emulator
+	var evt Event
+	evt.Init(EventGameState)
+	evt.SavedFrame.Checksum = msg.GameState.Checksum
+	evt.SavedFrame.Frame = msg.GameState.StartFrame
+	n.QueueEvent(&evt)
+
 	return true
 }
 

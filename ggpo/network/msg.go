@@ -65,6 +65,7 @@ type InputAckType struct {
 
 type GameStateType struct {
 	PeerConnectStatus []ggponet.ConnectStatus
+	StartFrame        int64
 	Checksum          int64
 }
 
