@@ -214,7 +214,7 @@ func (s *Sync) LoadFrame(frame int64) {
 	// Reset framecount and the head of the state ring-buffer to point in
 	// advance of the current frame (as if we had just finished executing it).
 	s.FrameCount = state.Frame
-	s.SavedState.Head = s.SavedState.Head + 1%int64(len(s.SavedState.Frames))
+	s.SavedState.Head = (s.SavedState.Head + 1) % int64(len(s.SavedState.Frames))
 }
 
 // SaveCurrentFrame write everything into the head, then advance the head pointer

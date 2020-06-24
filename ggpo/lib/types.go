@@ -14,4 +14,4 @@ func MAX(x, y int64) int64 {
 	return y
 }
 
-const MAX_INT = 0xEFFFFFF
+const MAX_INT = 0xEFFFFFF //TODO: Usefull?? Max int64?
