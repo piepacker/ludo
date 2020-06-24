@@ -22,6 +22,7 @@ const (
 	QualityReply
 	KeepAlive
 	InputAck
+	GameState
 )
 
 type HdrType struct {
@@ -62,6 +63,11 @@ type InputAckType struct {
 	AckFrame int64
 }
 
+type GameStateType struct {
+	PeerConnectStatus []ggponet.ConnectStatus
+	Checksum          int64
+}
+
 type NetplayMsgType struct {
 	ConnectStatus ggponet.ConnectStatus
 	Hdr           HdrType
@@ -71,6 +77,7 @@ type NetplayMsgType struct {
 	QualityReply  QualityReplyType
 	Input         InputType
 	InputAck      InputAckType
+	GameState     GameStateType
 }
 
 type StateType struct {

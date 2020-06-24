@@ -240,14 +240,14 @@ func (s *Sync) SaveCurrentFrame() {
 func (s *Sync) GetLastSavedFrame() SavedFrame {
 	i := s.SavedState.Head - 1
 	if i < 0 {
-		i = int64(unsafe.Sizeof(s.SavedState.Frames)) - 1
+		i = int64(len(s.SavedState.Frames)) - 1
 	}
 	return s.SavedState.Frames[i]
 }
 
 func (s *Sync) FindSavedFrameIndex(frame int64) int64 {
-	var i int64 = int64(unsafe.Sizeof(s.SavedState.Frames))
-	var count int64 = int64(unsafe.Sizeof(s.SavedState.Frames))
+	var i int64 = int64(len(s.SavedState.Frames))
+	var count int64 = int64(len(s.SavedState.Frames))
 	for i = 0; i < count; i++ {
 		if s.SavedState.Frames[i].Frame == frame {
 			break

@@ -177,6 +177,18 @@ func (n *Netplay) SendInput(input *lib.GameInput) {
 	n.SendPendingOutput()
 }
 
+func (n *Netplay) SendGameState(state lib.SavedFrame) {
+	var msg *NetplayMsgType = new(NetplayMsgType)
+	msg.Init(GameState)
+	msg.GameState.Checksum = state.Checksum
+	if n.LocalConnectStatus != nil {
+		copy(msg.GameState.PeerConnectStatus, n.LocalConnectStatus)
+	} else {
+		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, MSG_MAX_PLAYERS)
+	}
+	n.SendMsg(msg)
+}
+
 func (n *Netplay) SendPendingOutput() {
 	var msg *NetplayMsgType = new(NetplayMsgType)
 	msg.Init(Input)
@@ -344,6 +356,12 @@ func (n *Netplay) OnSyncReply(msg *NetplayMsgType) bool {
 		n.QueueEvent(&evt)
 		n.SendSyncRequest()
 	}
+	return true
+}
+
+func (n *Netplay) OnGameState(msg *NetplayMsgType) bool {
+	logrus.Info("ON GAME STATE")
+	logrus.Info("Game State Checksum: ", msg.GameState.Checksum)
 	return true
 }
 
@@ -623,6 +641,9 @@ func (n *Netplay) OnMsg(msg *NetplayMsgType) {
 		break
 	case InputAck:
 		handled = n.OnInputAck(msg)
+		break
+	case GameState:
+		handled = n.OnGameState(msg)
 		break
 	default:
 		handled = false

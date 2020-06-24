@@ -383,6 +383,13 @@ func (p *Peer2PeerBackend) AddPlayer(player *ggponet.GGPOPlayer, handle *ggponet
 
 func (p *Peer2PeerBackend) IncrementFrame() ggponet.GGPOErrorCode {
 	logrus.Info(fmt.Sprintf("End of frame (%d)...", p.Sync.FrameCount))
+
+	//Send game state to remote players
+	for i := 0; i < int(p.NumPlayers); i++ {
+		if int64(i) != p.LocalPlayerIndex {
+			p.Endpoints[i].SendGameState(p.Sync.GetLastSavedFrame())
+		}
+	}
 	p.Sync.IncrementFrame()
 	p.DoPoll()
 	p.PollSyncEvents()
