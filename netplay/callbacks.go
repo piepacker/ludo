@@ -24,20 +24,21 @@ func (c *Callbacks) BeginGame(game string) bool {
 	return true
 }
 
-func (c *Callbacks) SaveGameState(buffer []byte, len *int64, checksum *int64, frame int64) {
+func (c *Callbacks) SaveGameState(buffer []byte, length *int64, checksum *int64, frame int64) {
 	logrus.Info("Saving Game State")
 	var err error
-	buffer, err = state.Global.Core.Serialize(uint(*len))
+	*length = int64(state.Global.Core.SerializeSize())
+	buffer, err = state.Global.Core.Serialize(uint(*length))
 	if err != nil {
 		logrus.Info("Error when saving game state")
 	}
 	*checksum = int64(crc32.ChecksumIEEE(buffer))
 }
 
-func (c *Callbacks) LoadGameState(buffer []byte, len int64) {
+func (c *Callbacks) LoadGameState(buffer []byte, length int64) {
 	logrus.Info("Loading Game State")
-	if len > 0 {
-		err := state.Global.Core.Unserialize(buffer, uint(len))
+	if length > 0 && len(buffer) > 0 {
+		err := state.Global.Core.Unserialize(buffer, uint(length))
 		if err != nil {
 			logrus.Info("Error when loading game state")
 		}

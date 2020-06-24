@@ -38,7 +38,6 @@ func AddLocalInput(ggpo *ggponet.GGPOSession, player ggponet.GGPOPlayerHandle, v
 	return (*ggpo).AddLocalInput(player, values, size)
 }
 
-// (Cette fonction n'a peut-être plus aucun sens dans la mesure où la réception des paquets va se faire en mode asynchrone)
 // Idle is used to define the time we allow ggpo to spent receive packets from other players during 1 frame
 func Idle(ggpo *ggponet.GGPOSession) ggponet.GGPOErrorCode {
 	if ggpo == nil {
