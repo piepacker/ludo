@@ -3,22 +3,27 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/libretro/ludo/audio"
 	"github.com/libretro/ludo/core"
+	_ "github.com/libretro/ludo/ggpo/ggpolog"
+	"github.com/libretro/ludo/ggpo/ggponet"
 	"github.com/libretro/ludo/history"
 	"github.com/libretro/ludo/input"
 	"github.com/libretro/ludo/menu"
+	"github.com/libretro/ludo/netplay"
 	ntf "github.com/libretro/ludo/notifications"
 	"github.com/libretro/ludo/playlists"
 	"github.com/libretro/ludo/scanner"
 	"github.com/libretro/ludo/settings"
 	"github.com/libretro/ludo/state"
 	"github.com/libretro/ludo/video"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -28,6 +33,8 @@ func init() {
 
 func runLoop(vid *video.Video, m *menu.Menu) {
 	var currTime, prevTime time.Time
+	now := netplay.GetCurrentTimeMS()
+	next := netplay.GetCurrentTimeMS()
 	for !vid.Window.ShouldClose() {
 		currTime = time.Now()
 		dt := float32(currTime.Sub(prevTime)) / 1000000000
@@ -35,9 +42,17 @@ func runLoop(vid *video.Video, m *menu.Menu) {
 		m.ProcessHotkeys()
 		ntf.Process(dt)
 		vid.ResizeViewport()
-		if !state.Global.MenuActive {
+
+		now = netplay.GetCurrentTimeMS()
+		netplay.Idle()
+		if now >= next {
+			netplay.RunFrame()
+			next = now + (1000 / 60)
+		}
+		if !state.Global.MenuActive && netplay.Synchronized {
 			if state.Global.CoreRunning {
 				state.Global.Core.Run()
+
 				if state.Global.Core.FrameTimeCallback != nil {
 					state.Global.Core.FrameTimeCallback.Callback(state.Global.Core.FrameTimeCallback.Reference)
 				}
@@ -70,16 +85,24 @@ func main() {
 		log.Println("[Settings]: Using default settings")
 	}
 
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	flag.StringVar(&state.Global.CorePath, "L", "", "Path to the libretro core")
 	flag.BoolVar(&state.Global.Verbose, "v", false, "Verbose logs")
 	flag.BoolVar(&state.Global.LudOS, "ludos", false, "Expose the features related to LudOS")
+	numPlayers := flag.Int("n", 0, "Number of players")
 	flag.Parse()
 	args := flag.Args()
+	playersIP := make([]string, *numPlayers)
+	localPort := ""
 
 	var gamePath string
 	if len(args) > 0 {
 		gamePath = args[0]
+		if *numPlayers > 1 {
+			for i := 1; i < len(args)-1; i++ {
+				playersIP[i-1] = args[i]
+			}
+			localPort = args[len(args)-1]
+		}
 	}
 
 	if err := glfw.Init(); err != nil {
@@ -103,6 +126,10 @@ func main() {
 	m := menu.Init(vid)
 
 	core.Init(vid)
+
+	if *numPlayers > 1 {
+		InitNetwork(*numPlayers, playersIP, localPort)
+	}
 
 	input.Init(vid)
 
@@ -129,4 +156,29 @@ func main() {
 
 	// Unload and deinit in the core.
 	core.Unload()
+}
+
+// ./ludo -n=2 -L cores/snes9x_libretro.dll B:/Downloads/Street_Fighter_II_Turbo_U.smc local 127.0.0.1:8090 8089
+// ./ludo -n=2 -L cores/snes9x_libretro.dll B:/Downloads/Street_Fighter_II_Turbo_U.smc 127.0.0.1:8089 local 8090
+
+func InitNetwork(numPlayers int, playersIP []string, localPort string) {
+	players := make([]ggponet.GGPOPlayer, ggponet.GGPO_MAX_SPECTATORS+ggponet.GGPO_MAX_PLAYERS)
+
+	for i := 0; i < numPlayers; i++ {
+		players[i].PlayerNum = int64(i + 1)
+		if playersIP[i] == "local" {
+			players[i].Type = ggponet.GGPO_PLAYERTYPE_LOCAL
+			continue
+		}
+		players[i].Type = ggponet.GGPO_PLAYERTYPE_REMOTE
+		players[i].IPAddress = strings.Split(playersIP[i], ":")[0]
+		port, err := strconv.Atoi(strings.Split(playersIP[i], ":")[1])
+		players[i].Port = uint64(port)
+		if err != nil {
+			logrus.Panic("Error in InitNetwork")
+		}
+	}
+	//TODO: Spectators
+
+	netplay.Init(int64(numPlayers), players, localPort, 0, false)
 }

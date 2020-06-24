@@ -58,7 +58,7 @@ func Reconfigure(rate int32) {
 	audio.rate = rate
 	audio.numBuffers = 4
 
-	log.Printf("[OpenAL]: Using %v buffers of %v bytes.\n", audio.numBuffers, bufSize)
+	log.Printf("[OpenAL]: Using %v buffers of %v bytes.", audio.numBuffers, bufSize)
 
 	audio.source = al.GenSources(1)[0]
 	audio.buffers = al.GenBuffers(int(audio.numBuffers))

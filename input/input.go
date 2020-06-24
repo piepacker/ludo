@@ -11,7 +11,7 @@ import (
 )
 
 // MaxPlayers is the maximum number of players to poll input for
-const MaxPlayers = 5
+const MaxPlayers = 4
 
 type joybinds map[bind]uint32
 
@@ -84,7 +84,7 @@ func reset(state inputstate) inputstate {
 }
 
 // pollJoypads process joypads of all players
-func pollJoypads(state inputstate) inputstate {
+func PollJoypads(state inputstate) inputstate {
 	for p := range state {
 		buttonState := glfw.Joystick.GetButtons(glfw.Joystick(p))
 		axisState := glfw.Joystick.GetAxes(glfw.Joystick(p))
@@ -110,14 +110,19 @@ func pollJoypads(state inputstate) inputstate {
 	return state
 }
 
-// pollKeyboard processes keyboard keys
-func pollKeyboard(state inputstate) inputstate {
+func keyboardToPlayer(st inputstate, p int) inputstate {
 	for k, v := range keyBinds {
 		if vid.Window.GetKey(k) == glfw.Press {
-			state[0][v] = true
+			st[p][v] = true
 		}
 	}
-	return state
+	return st
+}
+
+// pollKeyboard processes keyboard keys
+func PollKeyboard(st inputstate) inputstate {
+	st = keyboardToPlayer(st, 0)
+	return st
 }
 
 // Compute the keys pressed or released during this frame
@@ -133,13 +138,12 @@ func getPressedReleased(new inputstate, old inputstate) (inputstate, inputstate)
 
 // Poll calculates the input state. It is meant to be called for each frame.
 func Poll() {
-	NewState = reset(NewState)
-	NewState = pollJoypads(NewState)
-	NewState = pollKeyboard(NewState)
 	Pressed, Released = getPressedReleased(NewState, OldState)
-
-	// Store the old input state for comparisions
 	OldState = NewState
+}
+
+func Reset() {
+	NewState = reset(NewState)
 }
 
 // State is a callback passed to core.SetInputState
