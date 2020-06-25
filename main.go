@@ -33,8 +33,6 @@ func init() {
 
 func runLoop(vid *video.Video, m *menu.Menu) {
 	var currTime, prevTime time.Time
-	now := netplay.GetCurrentTimeMS()
-	next := netplay.GetCurrentTimeMS()
 	for !vid.Window.ShouldClose() {
 		currTime = time.Now()
 		dt := float32(currTime.Sub(prevTime)) / 1000000000
@@ -43,12 +41,8 @@ func runLoop(vid *video.Video, m *menu.Menu) {
 		ntf.Process(dt)
 		vid.ResizeViewport()
 
-		now = netplay.GetCurrentTimeMS()
 		netplay.Idle()
-		if now >= next {
-			netplay.RunFrame()
-			next = now + (1000 / 60)
-		}
+		netplay.RunFrame()
 		if !state.Global.MenuActive && netplay.Synchronized {
 			if state.Global.CoreRunning {
 				state.Global.Core.Run()
