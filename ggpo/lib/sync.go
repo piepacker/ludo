@@ -191,7 +191,6 @@ func (s *Sync) AdjustSimulation(seekTo int64) {
 	}
 
 	s.Rollingback = false
-	logrus.Info("---")
 }
 
 func (s *Sync) LoadFrame(frame int64) {
@@ -206,8 +205,7 @@ func (s *Sync) LoadFrame(frame int64) {
 	s.SavedState.Head = s.FindSavedFrameIndex(frame)
 	var state *SavedFrame = &s.SavedState.Frames[s.SavedState.Head]
 
-	logrus.Info(fmt.Sprintf("Loading frame info %d (size: %d  checksum: %08x).",
-		state.Frame, state.Cbuf, state.Checksum))
+	logrus.Info(fmt.Sprintf("Loading frame info %d (size: %d  checksum: %08x).", state.Frame, state.Cbuf, state.Checksum))
 
 	s.Callbacks.LoadGameState(state.Buf, state.Cbuf)
 
@@ -245,7 +243,7 @@ func (s *Sync) GetLastSavedFrame() SavedFrame {
 }
 
 func (s *Sync) FindSavedFrameIndex(frame int64) int64 {
-	var i int64 = int64(len(s.SavedState.Frames))
+	var i int64
 	var count int64 = int64(len(s.SavedState.Frames))
 	for i = 0; i < count; i++ {
 		if s.SavedState.Frames[i].Frame == frame {

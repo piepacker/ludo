@@ -71,10 +71,10 @@ func (c *Callbacks) OnEvent(info *ggponet.GGPOEvent) {
 		break
 	case ggponet.GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER:
 		ngs.UpdateConnectProgress(info.Synchronized.Player, 100)
-		Synchronized = true
 		break
 	case ggponet.GGPO_EVENTCODE_RUNNING:
 		ngs.SetAllConnectState(Running)
+		Synchronized = true
 		break
 	case ggponet.GGPO_EVENTCODE_CONNECTION_INTERRUPTED:
 		ngs.SetDisconnectTimeout(info.ConnectionInterrupted.Player, int64(GetCurrentTimeMS()), info.ConnectionInterrupted.DisconnectTimeout)
