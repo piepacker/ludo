@@ -5,13 +5,14 @@ package input
 
 import (
 	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/libretro/ludo/ggpo/ggponet"
 	"github.com/libretro/ludo/libretro"
 	ntf "github.com/libretro/ludo/notifications"
 	"github.com/libretro/ludo/video"
 )
 
 // MaxPlayers is the maximum number of players to poll input for
-const MaxPlayers = 4
+const MaxPlayers = ggponet.GGPO_MAX_PLAYERS
 
 type joybinds map[bind]uint32
 

@@ -678,7 +678,6 @@ func (n *Netplay) OnMsg(msg *NetplayMsgType) {
 }
 
 func (n *Netplay) Synchronize() {
-	logrus.Info("CurrentState Syncing !")
 	n.CurrentState = Syncing
 	n.NetplayState.Sync.RoundTripsRemaining = NUM_SYNC_PACKETS
 	n.SendSyncRequest()

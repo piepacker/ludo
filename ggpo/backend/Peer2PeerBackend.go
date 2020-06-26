@@ -63,6 +63,8 @@ func (p *Peer2PeerBackend) Init(cb ggponet.GGPOSessionCallbacks, gamename string
 func (p *Peer2PeerBackend) AddRemotePlayer(player *ggponet.GGPOPlayer, localPort string, queue int64) {
 	p.Synchronizing = true
 	p.Endpoints[queue].Init(*player, localPort, queue, p.LocalConnectStatus, &p.Poll)
+	logrus.Info("MyPort : ", localPort)
+	logrus.Info("Other IP/Port : ", player.IPAddress, ":", player.Port, " Player Number ", player.PlayerNum)
 	if p.MustHostConnection(queue) {
 		p.Endpoints[queue].HostConnection()
 	} else {

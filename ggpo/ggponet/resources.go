@@ -1,7 +1,7 @@
 package ggponet
 
 const (
-	GGPO_MAX_PLAYERS              = 4
+	GGPO_MAX_PLAYERS              = 4 //TODO: Make this number dynamic
 	GGPO_MAX_PREDICTION_FRAMES    = 8
 	GGPO_MAX_SPECTATORS           = 32
 	GGPO_SPECTATOR_INPUT_INTERVAL = 4

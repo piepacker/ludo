@@ -8,7 +8,7 @@ import (
 
 const (
 	MAX_COMPRESSED_BITS = 4096
-	MSG_MAX_PLAYERS     = 4
+	MSG_MAX_PLAYERS     = ggponet.GGPO_MAX_PLAYERS
 )
 
 type MsgType int64
