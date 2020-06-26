@@ -347,7 +347,6 @@ func (n *Netplay) OnSyncReply(msg *NetplayMsgType) bool {
 	logrus.Info(fmt.Sprintf("Checking sync state (%d round trips remaining).", n.NetplayState.Sync.RoundTripsRemaining))
 	n.NetplayState.Sync.RoundTripsRemaining--
 	if n.NetplayState.Sync.RoundTripsRemaining == 0 {
-		logrus.Info("Synchronized!")
 		var evt Event
 		evt.Init(EventSynchronized)
 		n.QueueEvent(&evt)

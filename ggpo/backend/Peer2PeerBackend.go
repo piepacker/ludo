@@ -315,7 +315,7 @@ func (p *Peer2PeerBackend) OnNetplayPeerEvent(evt *network.Event, queue int64) {
 		}
 		break
 	case network.EventGameState:
-		//TODO: Rollback if checksum doesn't match / Player 1 must send his game state at the start of the session / Maybe it's not a checksum problem, it may be that the other player plays the inputs 2 times
+		//TODO: Rollback if checksum doesn't match
 		// if evt.SavedFrame.Checksum != p.Sync.GetLastSavedFrame().Checksum {
 		// 	p.Sync.AdjustSimulation(p.Sync.FrameCount - 1)
 		// }
