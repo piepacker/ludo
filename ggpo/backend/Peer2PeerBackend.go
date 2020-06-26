@@ -3,6 +3,7 @@ package backend
 import (
 	"bytes"
 	"fmt"
+	"net"
 
 	"github.com/libretro/ludo/ggpo/ggponet"
 	"github.com/libretro/ludo/ggpo/lib"
@@ -34,6 +35,7 @@ type Peer2PeerBackend struct {
 	Synchronizing         bool
 	LocalPort             string
 	Callbacks             ggponet.GGPOSessionCallbacks
+	HostingConn           *net.UDPConn
 }
 
 func (p *Peer2PeerBackend) Init(cb ggponet.GGPOSessionCallbacks, gamename string, localPort string) {
@@ -47,6 +49,7 @@ func (p *Peer2PeerBackend) Init(cb ggponet.GGPOSessionCallbacks, gamename string
 	config.InputSize = p.InputSize
 	config.Callbacks = p.Callbacks
 	config.NumPredictionFrames = lib.MAX_PREDICTION_FRAMES
+	p.HostingConn = nil
 
 	p.Players = make([]ggponet.GGPOPlayer, p.NumPlayers)
 	p.Endpoints = make([]network.Netplay, p.NumPlayers)
@@ -65,11 +68,12 @@ func (p *Peer2PeerBackend) AddRemotePlayer(player *ggponet.GGPOPlayer, localPort
 	p.Endpoints[queue].Init(*player, localPort, queue, p.LocalConnectStatus, &p.Poll)
 	logrus.Info("MyPort : ", localPort)
 	logrus.Info("Other IP/Port : ", player.IPAddress, ":", player.Port, " Player Number ", player.PlayerNum)
-	if p.MustHostConnection(queue) {
-		p.Endpoints[queue].HostConnection()
-	} else {
-		p.Endpoints[queue].JoinConnection()
-	}
+	// if p.MustHostConnection(queue) {
+	// 	p.Endpoints[queue].HostConnection()
+	// } else {
+	// 	p.Endpoints[queue].JoinConnection()
+	// }
+	p.HostingConn = p.Endpoints[queue].HostConnection(p.HostingConn)
 	p.Endpoints[queue].SetDisconnectTimeout(p.DisconnectTimeout)
 	p.Endpoints[queue].SetDisconnectNotifyStart(p.DisconnectNotifyStart)
 	p.Endpoints[queue].Synchronize()

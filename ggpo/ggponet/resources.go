@@ -40,10 +40,6 @@ type GGPOPlayer struct {
 	Port      uint64
 }
 
-type GGPOLocalEndpoint struct {
-	PlayerNum int64
-}
-
 type GGPOErrorCode int64
 
 const (

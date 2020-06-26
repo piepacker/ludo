@@ -20,7 +20,6 @@ var Synchronized = false
 type Callbacks struct{}
 
 func (c *Callbacks) BeginGame(game string) bool {
-	//TODO: Remove?
 	return true
 }
 

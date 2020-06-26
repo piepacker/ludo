@@ -267,17 +267,22 @@ func (n *Netplay) SendMsg(msg *NetplayMsgType) {
 	n.PumpSendQueue()
 }
 
-func (n *Netplay) HostConnection() {
+func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
 	logrus.Info("Netplay HostConnection")
 	n.IsHosting = true
-	var err error
-	n.Conn, err = net.ListenUDP("udp4", n.LocalAddr)
-	if err != nil {
-		logrus.Error("HostConnection Error : ", err)
-		return
+	if conn == nil {
+		var err error
+		n.Conn, err = net.ListenUDP("udp4", n.LocalAddr)
+		if err != nil {
+			logrus.Error("HostConnection Error : ", err)
+			return nil
+		}
+	} else {
+		n.Conn = conn
 	}
 	n.IsInitialized = true
 	go n.Read()
+	return n.Conn
 }
 
 func (n *Netplay) JoinConnection() {
