@@ -20,6 +20,10 @@ type OoPacket struct {
 	Msg      *NetplayMsgType
 }
 
+type Callbacks interface {
+	OnMsg(recvAddr *net.UDPAddr, msg *NetplayMsgType)
+}
+
 type State int64
 
 const (
@@ -43,7 +47,7 @@ const (
 )
 
 type Netplay struct {
-	Callbacks             ggponet.GGPOSessionCallbacks
+	Callbacks             *Callbacks
 	Conn                  *net.UDPConn
 	LocalAddr             *net.UDPAddr
 	RemoteAddr            *net.UDPAddr
@@ -72,6 +76,7 @@ type Netplay struct {
 	OoPacket              OoPacket
 	NetplayState          StateType
 	ReceiveChannel        chan NetplayMsgType
+	ReceiveAddr           chan *net.UDPAddr
 	DisconnectNotifyStart int64
 	DisconnectNotifySent  bool
 	NextRecvSeq           uint64
@@ -86,9 +91,10 @@ type Netplay struct {
 	IsInitialized         bool
 }
 
-func (n *Netplay) Init(remotePlayer ggponet.GGPOPlayer, localPort string, queue int64, status []ggponet.ConnectStatus, poll *lib.Poll) {
+func (n *Netplay) Init(remotePlayer ggponet.GGPOPlayer, localPort string, queue int64, status []ggponet.ConnectStatus, poll *lib.Poll, callbacks *Callbacks) {
 	n.LocalAddr, _ = net.ResolveUDPAddr("udp4", fmt.Sprintf("127.0.0.1:%s", localPort))
 	n.RemoteAddr, _ = net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%d", remotePlayer.IPAddress, int(remotePlayer.Port)))
+	n.Callbacks = callbacks
 	n.Queue = queue
 	n.IsInitialized = false
 	n.LastReceivedInput.SimpleInit(-1, nil, 1)
@@ -131,6 +137,7 @@ func (n *Netplay) Init(remotePlayer ggponet.GGPOPlayer, localPort string, queue 
 	poll.RegisterLoop(&i)
 
 	n.ReceiveChannel = make(chan NetplayMsgType, 60)
+	n.ReceiveAddr = make(chan *net.UDPAddr, 60)
 
 	logrus.Info(fmt.Sprintf("binding udp socket to port %d.", n.LocalAddr.Port))
 }
@@ -155,7 +162,7 @@ func (n *Netplay) Read() {
 	var msg *NetplayMsgType = new(NetplayMsgType)
 	for {
 		netinput := make([]byte, 8192)
-		length, _, err := n.Conn.ReadFromUDP(netinput)
+		length, recvAddr, err := n.Conn.ReadFromUDP(netinput)
 		if err != nil {
 			logrus.Error("Netplay Read Error : ", err)
 			logrus.Error("Netplay Length : ", length)
@@ -165,7 +172,12 @@ func (n *Netplay) Read() {
 		decoder := gob.NewDecoder(buffer)
 		decoder.Decode(msg)
 		n.ReceiveChannel <- *msg
+		n.ReceiveAddr <- recvAddr
 	}
+}
+
+func (n *Netplay) HandlesMsg(addr *net.UDPAddr) bool {
+	return n.RemoteAddr.IP.String() == addr.IP.String() && n.RemoteAddr.Port == addr.Port
 }
 
 func (n *Netplay) SendGameState(state lib.SavedFrame) {
@@ -277,11 +289,11 @@ func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
 			logrus.Error("HostConnection Error : ", err)
 			return nil
 		}
+		go n.Read()
 	} else {
 		n.Conn = conn
 	}
 	n.IsInitialized = true
-	go n.Read()
 	return n.Conn
 }
 
@@ -596,6 +608,7 @@ func (n *Netplay) SendSyncRequest() {
 	n.NetplayState.Sync.Random = rand.Uint64() & 0xFFFF
 	var msg *NetplayMsgType = new(NetplayMsgType)
 	msg.Init(SyncRequest)
+	logrus.Info("I'm sending random number : ", n.NetplayState.Sync.Random)
 	msg.SyncRequest.RandomRequest = n.NetplayState.Sync.Random
 	n.SendMsg(msg)
 }
@@ -693,12 +706,14 @@ func (n *Netplay) IsSynchronized() bool {
 
 func (n *Netplay) OnLoopPoll() bool {
 	messages := make([]NetplayMsgType, len(n.ReceiveChannel))
+	recvAddr := make([]*net.UDPAddr, len(n.ReceiveAddr))
 	for i := 0; i < len(n.ReceiveChannel); i++ {
 		messages[i] = <-n.ReceiveChannel
+		recvAddr[i] = <-n.ReceiveAddr
 	}
 
 	for i := 0; i < len(messages); i++ {
-		n.OnMsg(&messages[i])
+		(Callbacks)(*n.Callbacks).OnMsg(recvAddr[i], &messages[i])
 	}
 
 	var now uint64 = platform.GetCurrentTimeMS()
