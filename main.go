@@ -125,8 +125,8 @@ func main() {
 
 	if *numPlayers > 1 {
 		delay := int64(math.Round(float64(ping.GetAvgPing("8.8.8.8")) / float64(1000.0/60.0)))
-		if delay >= 6 {
-			netplay.FRAME_DELAY = 6
+		if delay >= netplay.MAX_FRAME_DELAY {
+			netplay.FRAME_DELAY = netplay.MAX_FRAME_DELAY
 		} else if delay > 0 {
 			netplay.FRAME_DELAY = delay
 		}

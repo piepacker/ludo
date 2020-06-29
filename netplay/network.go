@@ -14,7 +14,8 @@ var ggpoSession *ggponet.GGPOSession = nil
 var ngs NonGameState = NonGameState{}
 var syncTest = false
 
-var FRAME_DELAY int64 = 2 //TODO: Make frame delay depends on local network connection
+var FRAME_DELAY int64 = 2
+var MAX_FRAME_DELAY int64 = 6
 
 func Init(numPlayers int64, players []ggponet.GGPOPlayer, localPort string, numSpectators int64, test bool) {
 	var result ggponet.GGPOErrorCode
