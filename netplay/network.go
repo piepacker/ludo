@@ -21,7 +21,6 @@ func Init(numPlayers int64, players []ggponet.GGPOPlayer, localPort string, numS
 	syncTest = test
 
 	// Initialize the game state
-	//gs.Init(hwnd, num_players);
 	ngs.NumPlayers = numPlayers
 
 	// Fill in a ggpo callbacks structure to pass to start_session.
@@ -86,6 +85,7 @@ func DisconnectPlayer(player int64) {
 }
 
 func AdvanceFrame(inputs []byte, disconnectFlags int64) {
+	logrus.Info("len(inputs) == int(local.ActionLast*ggponet.GGPO_MAX_PLAYERS) : ", len(inputs), " = ", int(local.ActionLast*ggponet.GGPO_MAX_PLAYERS))
 	if len(inputs) == int(local.ActionLast*ggponet.GGPO_MAX_PLAYERS) {
 		playersInputs := make([][]byte, ggponet.GGPO_MAX_PLAYERS)
 		for i := 0; i < len(inputs); i += int(local.ActionLast) {
@@ -98,17 +98,11 @@ func AdvanceFrame(inputs []byte, disconnectFlags int64) {
 			local.NewState[i] = ByteToBool(playersInputs[i])
 		}
 		logrus.Info("======================= Inputs : ", inputs)
+		logrus.Info("======================= NewState[0] : ", local.NewState[0])
 		logrus.Info("======================= NewState[1] : ", local.NewState[1])
+		logrus.Info("======================= NewState[2] : ", local.NewState[2])
+		logrus.Info("======================= NewState[3] : ", local.NewState[3])
 	}
-
-	// update the checksums to display in the top of the window.  this
-	// helps to detect desyncs.
-	//TODO: Handle gs? (maybe not usefull)
-	/*ngs.Now.Framenumber = gs._framenumber;
-	ngs.Now.Checksum = fletcher32_checksum((short *)&gs, sizeof(gs) / 2);
-	if ((gs._framenumber % 90) == 0) {
-		ngs.periodic = ngs.now;
-	}*/
 
 	// Notify ggpo that we've moved forward exactly 1 frame.
 	ggpo.AdvanceFrame(ggpoSession)

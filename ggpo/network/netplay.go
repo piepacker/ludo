@@ -180,7 +180,11 @@ func (n *Netplay) SendGameState(state lib.SavedFrame) {
 	msg.GameState.Checksum = state.Checksum
 	msg.GameState.StartFrame = state.Frame
 	if n.LocalConnectStatus != nil {
-		copy(msg.GameState.PeerConnectStatus, n.LocalConnectStatus)
+		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, len(n.LocalConnectStatus))
+		for i := 0; i < len(n.LocalConnectStatus); i++ {
+			msg.GameState.PeerConnectStatus[i].Disconnected = n.LocalConnectStatus[i].Disconnected
+			msg.GameState.PeerConnectStatus[i].LastFrame = n.LocalConnectStatus[i].LastFrame
+		}
 	} else {
 		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, MSG_MAX_PLAYERS)
 	}
@@ -249,7 +253,11 @@ func (n *Netplay) SendPendingOutput() {
 
 	msg.Input.DisconnectRequested = n.CurrentState == Disconnected
 	if n.LocalConnectStatus != nil {
-		copy(msg.Input.PeerConnectStatus, n.LocalConnectStatus)
+		msg.GameState.PeerConnectStatus = make([]ggponet.ConnectStatus, len(n.LocalConnectStatus))
+		for i := 0; i < len(n.LocalConnectStatus); i++ {
+			msg.GameState.PeerConnectStatus[i].Disconnected = n.LocalConnectStatus[i].Disconnected
+			msg.GameState.PeerConnectStatus[i].LastFrame = n.LocalConnectStatus[i].LastFrame
+		}
 	} else {
 		msg.Input.PeerConnectStatus = make([]ggponet.ConnectStatus, MSG_MAX_PLAYERS)
 	}
@@ -361,9 +369,9 @@ func (n *Netplay) OnGameState(msg *NetplayMsgType) bool {
 	// Update the peer connection status if this peer is still considered to be part of the network.
 	remoteStatus := msg.GameState.PeerConnectStatus
 	for i := 0; i < len(remoteStatus); i++ {
-		if remoteStatus[i].LastFrame < n.PeerConnectStatus[i].LastFrame {
-			logrus.Panic("Assert error remotestatus Lastframe")
-		}
+		// if remoteStatus[i].LastFrame < n.PeerConnectStatus[i].LastFrame {
+		// 	logrus.Panic("Assert error remotestatus Lastframe")
+		// }
 		n.PeerConnectStatus[i].Disconnected = n.PeerConnectStatus[i].Disconnected || remoteStatus[i].Disconnected
 		n.PeerConnectStatus[i].LastFrame = lib.MAX(n.PeerConnectStatus[i].LastFrame, remoteStatus[i].LastFrame)
 	}
@@ -588,7 +596,6 @@ func (n *Netplay) SendSyncRequest() {
 	n.NetplayState.Sync.Random = rand.Uint64() & 0xFFFF
 	var msg *NetplayMsgType = new(NetplayMsgType)
 	msg.Init(SyncRequest)
-	logrus.Info("I'm sending random number : ", n.NetplayState.Sync.Random)
 	msg.SyncRequest.RandomRequest = n.NetplayState.Sync.Random
 	n.SendMsg(msg)
 }

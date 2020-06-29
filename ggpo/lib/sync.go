@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const MAX_PREDICTION_FRAMES = 8
+const MAX_PREDICTION_FRAMES = ggponet.GGPO_MAX_PREDICTION_FRAMES
 
 type Sync struct {
 	Rollingback         bool
