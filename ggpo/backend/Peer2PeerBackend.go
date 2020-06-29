@@ -121,9 +121,9 @@ func (p *Peer2PeerBackend) SyncInput(values []byte, size int64, disconnectFlags 
 	}
 
 	diff := make([]byte, size)
-	logrus.Info("Values before : ", values)
+	logrus.Info("Values before : ", values) //TODO: Remove logrus here
 	flags = p.Sync.SynchronizeInputs(values, size)
-	if bytes.Compare(diff, values) != 0 {
+	if bytes.Compare(diff, values) != 0 { //TODO: Remove logrus here
 		logrus.Info("Values after : ", values)
 	}
 	if *disconnectFlags != 0 {

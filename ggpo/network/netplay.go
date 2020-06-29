@@ -282,7 +282,6 @@ func (n *Netplay) SendMsg(msg *NetplayMsgType) {
 }
 
 func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
-	logrus.Info("Netplay HostConnection")
 	if conn == nil {
 		var err error
 		n.Conn, err = net.ListenUDP("udp4", n.LocalAddr)
@@ -299,7 +298,6 @@ func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
 }
 
 func (n *Netplay) Disconnect() ggponet.GGPOErrorCode {
-	logrus.Info("Netplay Disconnect !")
 	n.CurrentState = Disconnected
 	n.ShutDownTimeout = int64(platform.GetCurrentTimeMS()) + UDP_SHUTDOWN_TIMER
 	if n.Conn == nil {
