@@ -52,7 +52,6 @@ type Netplay struct {
 	LocalAddr             *net.UDPAddr
 	RemoteAddr            *net.UDPAddr
 	Queue                 int64
-	IsHosting             bool
 	LastReceivedInput     lib.GameInput
 	LastAckedInput        lib.GameInput
 	LastSentInput         lib.GameInput
@@ -143,15 +142,10 @@ func (n *Netplay) Init(remotePlayer ggponet.GGPOPlayer, localPort string, queue 
 }
 
 func (n *Netplay) Write(msg *NetplayMsgType) {
-	var err error
 	var buffer bytes.Buffer
 	encoder := gob.NewEncoder(&buffer)
 	encoder.Encode(msg)
-	if n.IsHosting {
-		_, err = n.Conn.WriteToUDP(buffer.Bytes(), n.RemoteAddr)
-	} else {
-		_, err = n.Conn.Write(buffer.Bytes())
-	}
+	_, err := n.Conn.WriteToUDP(buffer.Bytes(), n.RemoteAddr)
 	if err != nil {
 		logrus.Error("Netplay Write Error : ", err)
 		return
@@ -281,7 +275,6 @@ func (n *Netplay) SendMsg(msg *NetplayMsgType) {
 
 func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
 	logrus.Info("Netplay HostConnection")
-	n.IsHosting = true
 	if conn == nil {
 		var err error
 		n.Conn, err = net.ListenUDP("udp4", n.LocalAddr)
@@ -295,19 +288,6 @@ func (n *Netplay) HostConnection(conn *net.UDPConn) *net.UDPConn {
 	}
 	n.IsInitialized = true
 	return n.Conn
-}
-
-func (n *Netplay) JoinConnection() {
-	logrus.Info("Netplay JoinConnection")
-	n.IsHosting = false
-	var err error
-	n.Conn, err = net.DialUDP("udp4", n.LocalAddr, n.RemoteAddr)
-	if err != nil {
-		logrus.Error("JoinConnection Error : ", err)
-		return
-	}
-	n.IsInitialized = true
-	go n.Read()
 }
 
 func (n *Netplay) Disconnect() ggponet.GGPOErrorCode {

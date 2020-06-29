@@ -67,26 +67,10 @@ func (p *Peer2PeerBackend) AddRemotePlayer(player *ggponet.GGPOPlayer, localPort
 	p.Synchronizing = true
 	var c network.Callbacks = p
 	p.Endpoints[queue].Init(*player, localPort, queue, p.LocalConnectStatus, &p.Poll, &c)
-	// if p.MustHostConnection(queue) {
-	// 	p.Endpoints[queue].HostConnection()
-	// } else {
-	// 	p.Endpoints[queue].JoinConnection()
-	// }
 	p.HostingConn = p.Endpoints[queue].HostConnection(p.HostingConn)
 	p.Endpoints[queue].SetDisconnectTimeout(p.DisconnectTimeout)
 	p.Endpoints[queue].SetDisconnectNotifyStart(p.DisconnectNotifyStart)
 	p.Endpoints[queue].Synchronize()
-}
-
-func (p *Peer2PeerBackend) MustHostConnection(other int64) bool {
-	result := false
-	for i := 0; i < int(other); i++ {
-		if p.Players[i].Type == ggponet.GGPO_PLAYERTYPE_LOCAL {
-			result = true
-			break
-		}
-	}
-	return result
 }
 
 func (p *Peer2PeerBackend) AddLocalInput(player ggponet.GGPOPlayerHandle, values []byte, size int64) ggponet.GGPOErrorCode {
