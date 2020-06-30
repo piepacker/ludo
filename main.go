@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"math"
 	"runtime"
 	"strconv"
 	"strings"
@@ -19,7 +18,6 @@ import (
 	"github.com/libretro/ludo/menu"
 	"github.com/libretro/ludo/netplay"
 	ntf "github.com/libretro/ludo/notifications"
-	"github.com/libretro/ludo/ping"
 	"github.com/libretro/ludo/playlists"
 	"github.com/libretro/ludo/scanner"
 	"github.com/libretro/ludo/settings"
@@ -124,12 +122,12 @@ func main() {
 	core.Init(vid)
 
 	if *numPlayers > 1 {
-		delay := int64(math.Round(float64(ping.GetAvgPing("8.8.8.8")) / float64(1000.0/60.0)))
+		/*delay := int64(math.Round(float64(ping.GetAvgPing("8.8.8.8")) / float64(1000.0/60.0)))
 		if delay >= netplay.MAX_FRAME_DELAY {
 			netplay.FRAME_DELAY = netplay.MAX_FRAME_DELAY
 		} else if delay > 0 {
 			netplay.FRAME_DELAY = delay
-		}
+		}*/
 		InitNetwork(*numPlayers, playersIP, localPort)
 	}
 
