@@ -153,8 +153,8 @@ func (n *Netplay) Write(msg *NetplayMsgType) {
 }
 
 func (n *Netplay) Read() {
-	var msg *NetplayMsgType = new(NetplayMsgType)
 	for {
+		var msg *NetplayMsgType = new(NetplayMsgType)
 		netinput := make([]byte, 8192)
 		length, recvAddr, err := n.Conn.ReadFromUDP(netinput)
 		if err != nil {
@@ -437,7 +437,7 @@ func (n *Netplay) OnInput(msg *NetplayMsgType) bool {
 				button := bitvector.ReadNibblet(bits, &offset)
 				if useInputs {
 					if on > 0 {
-						logrus.Info("Button : ", bits) //TODO: It has been temporary fixed %40
+						logrus.Info("Button : ", bits) //TODO: It has been temporary fixed %GAME_INPUT_MAX_BYTES
 						n.LastReceivedInput.Set(button)
 					} else {
 						n.LastReceivedInput.Clear(button)
@@ -623,7 +623,7 @@ func (n *Netplay) OnMsg(msg *NetplayMsgType) {
 	seq := msg.Hdr.SequenceNumber
 	if msg.Hdr.Type != SyncRequest && msg.Hdr.Type != SyncReply {
 		if msg.Hdr.Magic != n.RemoteMagicNumber {
-			//LogMsg("recv rejecting", msg)
+			logrus.Info("recv rejecting : ", msg)
 			return
 		}
 
@@ -637,7 +637,7 @@ func (n *Netplay) OnMsg(msg *NetplayMsgType) {
 	}
 
 	n.NextRecvSeq = seq
-	//LogMsg("recv", msg);
+	logrus.Info("recv : ", msg)
 
 	switch msg.Hdr.Type {
 	case SyncRequest:
